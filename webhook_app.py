@@ -32,7 +32,6 @@ async def startup():
     global app_telegram
     app_telegram = build_application()
 
-    # 🔴 ВАЖНО: сначала initialize, потом (опционально) set_webhook, затем start
     await app_telegram.initialize()
 
     base_url = os.environ.get("BASE_URL", "").rstrip("/")
