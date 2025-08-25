@@ -1,4 +1,4 @@
-# webhook_app.py
+# webhook_app.py (fixed)
 import os
 import logging
 from starlette.applications import Starlette
@@ -12,7 +12,6 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("webhook")
 
 WEBHOOK_PATH = f"/telegram/{BOT_TOKEN}" if BOT_TOKEN else "/telegram/secret"
-PORT = int(os.environ.get("PORT", "10000"))
 
 app_telegram = None
 
@@ -29,8 +28,12 @@ async def telegram_webhook(request):
     return PlainTextResponse("ok")
 
 async def startup():
+    """Called by Starlette when the server starts."""
     global app_telegram
     app_telegram = build_application()
+
+    # 🔴 ВАЖНО: сначала initialize, потом (опционально) set_webhook, затем start
+    await app_telegram.initialize()
 
     base_url = os.environ.get("BASE_URL", "").rstrip("/")
     if base_url:
@@ -40,9 +43,18 @@ async def startup():
     else:
         logger.warning("BASE_URL is not set. Set it in Render env and redeploy to activate webhook.")
 
+    await app_telegram.start()
+
+async def shutdown():
+    """Graceful stop on server shutdown/redeploy."""
+    global app_telegram
+    if app_telegram:
+        await app_telegram.stop()
+        await app_telegram.shutdown()
+
 routes = [
     Route("/", root, methods=["GET"]),
     Route(WEBHOOK_PATH, telegram_webhook, methods=["POST"]),
 ]
 
-app = Starlette(routes=routes, on_startup=[startup])
+app = Starlette(routes=routes, on_startup=[startup], on_shutdown=[shutdown])
