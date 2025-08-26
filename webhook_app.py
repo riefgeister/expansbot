@@ -58,6 +58,5 @@ routes = [
 ]
 
 app = Starlette(routes=routes, on_startup=[startup], on_shutdown=[shutdown])
-]
 
 app = Starlette(routes=routes, on_startup=[startup], on_shutdown=[shutdown])
