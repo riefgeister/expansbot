@@ -19,7 +19,7 @@ SPREADSHEET_ID = os.environ.get("SPREADSHEET_ID", "")
 WORKSHEET_NAME = os.environ.get("WORKSHEET_NAME", "Sheet1")
 GOOGLE_CREDENTIALS_JSON = os.environ.get("GOOGLE_CREDENTIALS_JSON", "")
 
-CATEGORIES = os.environ.get("CATEGORIES", "food,household,rent").split(",")
+CATEGORIES = os.environ.get("CATEGORIES", "Food,Household,Rent,Entertainment,Alco,Clothing,Cosmetics,Taxes,Meds,Travel").split(",")
 
 # ========= Google Sheets client =========
 def get_worksheet():
@@ -69,18 +69,18 @@ async def write_row(amount: float, category: str, user) -> None:
 
 # ========= Handlers =========
 async def start_expense(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Введите сумму траты (например: 12.50):")
+    await update.message.reply_text("Type the sum:")
     return AMOUNT
 
 async def amount_received(update: Update, context: ContextTypes.DEFAULT_TYPE):
     amt = parse_amount(update.message.text)
     if amt is None or amt <= 0:
-        await update.message.reply_text("Не удалось распознать сумму. Введите число, например: 12.50")
+        await update.message.reply_text("Sum is not recognized, try to insert the numeric value, e.g. 12.50")
         return AMOUNT
 
     context.user_data["amount"] = amt
     await update.message.reply_text(
-        f"Сумма: {amt}. Теперь выберите категорию:",
+        f"Sum: {amt}. Now select the category:",
         reply_markup=category_keyboard()
     )
     return CATEGORY
@@ -91,26 +91,26 @@ async def category_chosen(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     data = query.data or ""
     if not data.startswith("cat:"):
-        await query.edit_message_text("Неверный выбор. Попробуйте снова.")
+        await query.edit_message_text("Choice invalid, please try again.")
         return CATEGORY
 
     category = data.split(":", 1)[1]
     amount = context.user_data.get("amount")
     if amount is None:
-        await query.edit_message_text("Не найдена сумма. Начните заново: /expense")
+        await query.edit_message_text("Sum not found, please try again: /expense")
         return ConversationHandler.END
 
     try:
         await write_row(amount, category, query.from_user)
-        await query.edit_message_text(f"✅ Записано: {amount} — {category}")
+        await query.edit_message_text(f"✅ Recorded: {amount} — {category}")
     except Exception as e:
-        await query.edit_message_text(f"⚠️ Не удалось записать в таблицу: {e}")
+        await query.edit_message_text(f"⚠️ Recording failed: {e}")
 
     context.user_data.clear()
     return ConversationHandler.END
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Операция отменена.")
+    await update.message.reply_text("Operation cancelled.")
     context.user_data.clear()
     return ConversationHandler.END
 
