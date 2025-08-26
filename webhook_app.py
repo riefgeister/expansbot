@@ -6,14 +6,11 @@ from starlette.responses import PlainTextResponse, JSONResponse
 from starlette.routing import Route
 from telegram import Update
 
-# ⚠️ Берём реальную функцию из bot_expense и даём ей имя build_application
-from bot_expense import build_app as build_application
+from bot_expense import build_application, BOT_TOKEN
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("webhook")
 
-# Берём токен из окружения (не из bot_expense)
-BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
 WEBHOOK_PATH = f"/telegram/{BOT_TOKEN}" if BOT_TOKEN else "/telegram/secret"
 
 app_telegram = None
@@ -35,7 +32,7 @@ async def startup():
     global app_telegram
     app_telegram = build_application()
 
-    # порядок важен: initialize -> set_webhook -> start
+    # 🔴 ВАЖНО: сначала initialize, потом (опционально) set_webhook, затем start
     await app_telegram.initialize()
 
     base_url = os.environ.get("BASE_URL", "").rstrip("/")
@@ -49,6 +46,7 @@ async def startup():
     await app_telegram.start()
 
 async def shutdown():
+    """Graceful stop on server shutdown/redeploy."""
     global app_telegram
     if app_telegram:
         await app_telegram.stop()
@@ -57,6 +55,9 @@ async def shutdown():
 routes = [
     Route("/", root, methods=["GET"]),
     Route(WEBHOOK_PATH, telegram_webhook, methods=["POST"]),
+]
+
+app = Starlette(routes=routes, on_startup=[startup], on_shutdown=[shutdown])
 ]
 
 app = Starlette(routes=routes, on_startup=[startup], on_shutdown=[shutdown])
