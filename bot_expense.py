@@ -18,8 +18,8 @@ log = logging.getLogger("expense-bot")
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
 SPREADSHEET_ID = os.environ.get("SPREADSHEET_ID", "")
 WORKSHEET_NAME = os.environ.get("WORKSHEET_NAME", "Sheet1")
-GOOGLE_CREDENTIALS_JSON = os.environ.get("GOOGLE_CREDENTIALS_JSON", "")
-GOOGLE_CREDENTIALS_JSON_FILE = os.environ.get("GOOGLE_CREDENTIALS_JSON_FILE", "")
+GOOGLE_CREDENTIALS_JSON_FILE = os.environ.get("GOOGLE_CREDENTIALS_JSON_FILE", "").strip()
+GOOGLE_CREDENTIALS_JSON = os.environ.get("GOOGLE_CREDENTIALS_JSON", "").strip()
 # Button categories (edit as you like)
 CATEGORIES = [
     "Food", "Household", "Rent", "Entertainment", "Alco",
